@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # SameDay API
+  api:
+    build: .
+    container_name: sameday-api
+    ports:
+      - "${API_PORT:-3004}:3004"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3004
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - sameday-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: sameday-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-root}
+      - MYSQL_DATABASE=${DB_DATABASE:-sameday_api}
+      - MYSQL_USER=${DB_USER:-sameday}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-sameday}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - sameday-network
+
+  # Redis for sessions
+  redis:
+    image: redis:7-alpine
+    container_name: sameday-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - sameday-network
+
+  # phpMyAdmin (optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: sameday-phpmyadmin
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=${DB_PASSWORD:-root}
+    ports:
+      - "${PMA_PORT:-8080}:80"
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    networks:
+      - sameday-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  sameday-network:
+    driver: bridge 
