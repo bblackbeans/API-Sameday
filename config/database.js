@@ -48,14 +48,20 @@ module.exports = {
   |
   */
   mysql: {
-    client: 'mysql',
+    client: 'mysql2',
     connection: {
       host: Env.get('DB_HOST', 'localhost'),
       port: Env.get('DB_PORT', ''),
       user: Env.get('DB_USER', 'root'),
       password: Env.get('DB_PASSWORD', ''),
       database: Env.get('DB_DATABASE', 'adonis')
-    }
+    },
+    pool: {
+      min: 2,
+      max: 10
+    },
+    acquireConnectionTimeout: 60000,
+    timeout: 60000
   },
 
   /*
