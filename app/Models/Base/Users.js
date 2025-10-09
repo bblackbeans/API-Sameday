@@ -7,6 +7,14 @@ class Users extends Model {
   static boot() {
     super.boot()
     this.addTrait('NoTimestamp')
+    
+    // Hook para hash da senha antes de salvar
+    this.addHook('beforeSave', async (userInstance) => {
+      if (userInstance.dirty.password) {
+        const Hash = use('Hash')
+        userInstance.password = await Hash.make(userInstance.password)
+      }
+    })
   }
 
   static get table() {
