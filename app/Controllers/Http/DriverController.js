@@ -1,6 +1,7 @@
 'use strict'
 
 const User = use('App/Models/Base/Users')
+const Hash = use('Hash')
 
 class DriverController {
   async register({ request, response }) {
