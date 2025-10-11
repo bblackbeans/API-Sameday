@@ -13,8 +13,56 @@ class DeliveryController {
       const latitude = request.input('latitude')
       const longitude = request.input('longitude')
 
-      // Simular entregas disponíveis (implementar modelo real depois)
-      const mockDeliveries = [
+      const Order = use('App/Models/Base/Orders')
+      const OrderInformation = use('App/Models/Base/OrderInformation')
+      const Items = use('App/Models/Base/Items')
+      const Addresses = use('App/Models/Base/Addresses')
+
+      // Buscar entregas disponíveis no banco
+      const orders = await Order.query()
+        .where('status', 'available')
+        .where('idDriver', null) // Sem motorista atribuído
+        .with(['orderInformation', 'items', 'verificationCodeCollectAndDestinationDriver'])
+        .paginate(page, perPage)
+
+      // Converter para formato esperado pelo app
+      const deliveries = orders.data.map(order => {
+        const info = order.orderInformation
+        const collectAddress = info?.collectAddress ? JSON.parse(info.collectAddress) : {}
+        const deliveryAddress = info?.deliveryAddress ? JSON.parse(info.deliveryAddress) : {}
+
+        return {
+          id: order.id.toString(),
+          origin: {
+            address: collectAddress.address || 'Endereço não informado',
+            district: collectAddress.district || 'Distrito não informado',
+            latitude: collectAddress.latitude || -23.5505,
+            longitude: collectAddress.longitude || -46.6333
+          },
+          destination: {
+            address: deliveryAddress.address || 'Endereço não informado',
+            district: deliveryAddress.district || 'Distrito não informado',
+            latitude: deliveryAddress.latitude || -23.5618,
+            longitude: deliveryAddress.longitude || -46.6565
+          },
+          value: parseFloat(order.value || 0),
+          distance: parseFloat(order.distance || 0),
+          estimatedTime: parseInt(order.estimatedTime || 30),
+          description: info?.description || 'Entrega sem descrição',
+          customer: {
+            name: order.customerName || 'Cliente não informado',
+            phone: order.customerPhone || '+55 11 99999-9999'
+          },
+          items: order.items || [],
+          status: order.status || 'available',
+          createdAt: order.created_at,
+          updatedAt: order.updated_at
+        }
+      })
+
+      // Se não há entregas reais, usar algumas mockadas para demonstração
+      if (deliveries.length === 0) {
+        const mockDeliveries = [
         {
           id: '1',
           origin: {
@@ -74,14 +122,24 @@ class DeliveryController {
           status: 'available',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
-      ]
+        ]
+
+        return response.json({
+          status: 'success',
+          deliveries: mockDeliveries,
+          pagination: {
+            page: 1,
+            perPage: 10,
+            total: mockDeliveries.length,
+            totalPages: 1
+          }
+        })
+      }
 
       return response.json({
         status: 'success',
-        deliveries: mockDeliveries,
-        total: mockDeliveries.length,
-        page,
-        perPage
+        deliveries: deliveries,
+        pagination: orders.pagination
       })
     } catch (error) {
       console.error('Erro ao obter entregas disponíveis:', error)
