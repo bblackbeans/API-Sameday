@@ -271,45 +271,6 @@ class DriverController {
     }
   }
 
-  async getStats({ auth, response }) {
-    try {
-      const user = await auth.getUser()
-
-      // Simular estatísticas por enquanto
-      const stats = {
-        totalDeliveries: 0,
-        completedDeliveries: 0,
-        cancelledDeliveries: 0,
-        totalEarnings: 0,
-        totalDistance: 0,
-        averageRating: 0,
-        successRate: 0,
-        averageDeliveryTime: 0,
-        weeklyStats: {
-          deliveries: 0,
-          earnings: 0,
-          distance: 0
-        },
-        monthlyStats: {
-          deliveries: 0,
-          earnings: 0,
-          distance: 0
-        }
-      }
-
-      return response.json({
-        status: 'success',
-        stats
-      })
-    } catch (error) {
-      console.error('Erro ao obter estatísticas:', error)
-      return response.status(500).json({
-        status: 'error',
-        message: 'Erro interno do servidor'
-      })
-    }
-  }
-
   async updateVehicleData({ request, auth, response }) {
     try {
       const user = await auth.getUser()
