@@ -270,6 +270,81 @@ class DriverController {
       })
     }
   }
+
+  async updateVehicleData({ request, auth, response }) {
+    try {
+      const user = await auth.getUser()
+      const vehicleData = request.all()
+
+      // Atualizar dados do veículo no usuário
+      await User.query()
+        .where('id', user.id)
+        .update({
+          vehicle_type: vehicleData.type,
+          vehicle_data: JSON.stringify(vehicleData)
+        })
+
+      return response.json({
+        status: 'success',
+        message: 'Dados do veículo atualizados com sucesso'
+      })
+    } catch (error) {
+      console.error('Erro ao atualizar dados do veículo:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor'
+      })
+    }
+  }
+
+  async updatePaymentData({ request, auth, response }) {
+    try {
+      const user = await auth.getUser()
+      const paymentData = request.all()
+
+      // Atualizar dados de pagamento no usuário
+      await User.query()
+        .where('id', user.id)
+        .update({
+          payment_data: JSON.stringify(paymentData)
+        })
+
+      return response.json({
+        status: 'success',
+        message: 'Dados de pagamento atualizados com sucesso'
+      })
+    } catch (error) {
+      console.error('Erro ao atualizar dados de pagamento:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor'
+      })
+    }
+  }
+
+  async completeOnboarding({ auth, response }) {
+    try {
+      const user = await auth.getUser()
+
+      // Marcar onboarding como completo
+      await User.query()
+        .where('id', user.id)
+        .update({
+          has_completed_onboarding: true
+        })
+
+      return response.json({
+        status: 'success',
+        message: 'Onboarding concluído com sucesso'
+      })
+    } catch (error) {
+      console.error('Erro ao completar onboarding:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor'
+      })
+    }
+  }
 }
 
 module.exports = DriverController

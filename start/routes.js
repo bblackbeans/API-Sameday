@@ -93,7 +93,7 @@ Route.group('Shared With Platforms - No Authentication', () => {
   Route.put('drivers/profile', 'DriverController.updateProfile').middleware(['auth:sameDay'])
   Route.post('drivers/avatar', 'DriverController.uploadAvatar').middleware(['auth:sameDay'])
   Route.post('drivers/documents', 'DriverController.uploadDocument').middleware(['auth:sameDay'])
-  Route.put('drivers/vehicle', 'DriverController.updateVehicle').middleware(['auth:sameDay'])
+  Route.put('drivers/vehicle', 'DriverController.updateVehicleData').middleware(['auth:sameDay'])
   Route.put('drivers/payment', 'DriverController.updatePayment').middleware(['auth:sameDay'])
   Route.get('drivers/stats', 'DriverController.getStats').middleware(['auth:sameDay'])
   Route.put('drivers/change-password', 'DriverController.changePassword').middleware(['auth:sameDay'])
