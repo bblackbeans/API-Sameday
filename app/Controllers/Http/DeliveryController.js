@@ -164,6 +164,28 @@ class DeliveryController {
     }
   }
 
+  // Rejeitar uma entrega
+  async reject({ auth, params, response }) {
+    try {
+      const user = await auth.getUser()
+      const { id } = params
+
+      // Simular rejeição de entrega (implementar modelo real depois)
+      return response.json({
+        status: 'success',
+        message: 'Entrega rejeitada com sucesso',
+        deliveryId: id,
+        driverId: user.id
+      })
+    } catch (error) {
+      console.error('Erro ao rejeitar entrega:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor'
+      })
+    }
+  }
+
   // Atualizar status da entrega
   async updateStatus({ auth, params, request, response }) {
     try {
