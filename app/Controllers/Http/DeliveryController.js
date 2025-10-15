@@ -97,36 +97,78 @@ class DeliveryController {
       const user = await auth.getUser()
       const { id } = params
 
-      // Simular detalhes de entrega (implementar modelo real depois)
-      const delivery = {
-        id: id,
-        origin: {
-          address: 'Rua das Flores, 123',
-          district: 'Centro',
-          latitude: -23.5505,
-          longitude: -46.6333
+      // Dados mockados para diferentes entregas
+      const mockDeliveries = {
+        '1': {
+          id: '1',
+          origin: {
+            address: 'Rua das Flores, 123',
+            district: 'Centro',
+            latitude: -23.5505,
+            longitude: -46.6333
+          },
+          destination: {
+            address: 'Av. Paulista, 1000',
+            district: 'Bela Vista',
+            latitude: -23.5618,
+            longitude: -46.6565
+          },
+          value: 25.50,
+          distance: 2800,
+          estimatedTime: 45,
+          description: 'Entrega de documentos importantes',
+          customer: {
+            name: 'Maria Silva',
+            phone: '+55 11 99999-9999'
+          },
+          items: [
+            { name: 'Documentos', quantity: 1 },
+            { name: 'Envelope lacrado', quantity: 1 }
+          ],
+          status: 'available',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         },
-        destination: {
-          address: 'Av. Paulista, 1000',
-          district: 'Bela Vista',
-          latitude: -23.5618,
-          longitude: -46.6565
-        },
-        value: 25.50,
-        distance: 2800,
-        estimatedTime: 45,
-        description: 'Entrega de documentos importantes',
-        customer: {
-          name: 'Maria Silva',
-          phone: '+55 11 99999-9999'
-        },
-        items: [
-          { name: 'Documentos', quantity: 1 },
-          { name: 'Envelope lacrado', quantity: 1 }
-        ],
-        status: 'available',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        '2': {
+          id: '2',
+          origin: {
+            address: 'Rua Augusta, 500',
+            district: 'Consolação',
+            latitude: -23.5505,
+            longitude: -46.6333
+          },
+          destination: {
+            address: 'Rua Oscar Freire, 200',
+            district: 'Jardins',
+            latitude: -23.5618,
+            longitude: -46.6565
+          },
+          value: 32.00,
+          distance: 1200,
+          estimatedTime: 25,
+          description: 'Entrega de comida quente',
+          customer: {
+            name: 'João Santos',
+            phone: '+55 11 98888-8888'
+          },
+          items: [
+            { name: 'Pizza margherita', quantity: 1 },
+            { name: 'Refrigerante 2L', quantity: 1 }
+          ],
+          status: 'available',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      }
+
+      // Buscar a entrega pelo ID
+      const delivery = mockDeliveries[id]
+
+      if (!delivery) {
+        return response.status(404).json({
+          status: 'error',
+          message: 'Entrega não encontrada'
+        })
       }
 
       return response.json({
