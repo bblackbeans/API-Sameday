@@ -271,6 +271,51 @@ class DriverController {
     }
   }
 
+  async updateProfile({ request, auth, response }) {
+    try {
+      const user = await auth.getUser()
+      const data = request.only(['name', 'email', 'phone', 'cpf', 'birthDate', 'address', 'city', 'state', 'zipCode'])
+
+      // Atualizar apenas os campos fornecidos
+      if (data.name) user.name = data.name
+      if (data.email) user.email = data.email
+      if (data.phone) user.phone = data.phone
+      if (data.cpf) user.cpfcnpj = data.cpf
+      if (data.birthDate) user.birth_date = data.birthDate
+      if (data.address) user.address = data.address
+      if (data.city) user.city = data.city
+      if (data.state) user.state = data.state
+      if (data.zipCode) user.zip_code = data.zipCode
+
+      await user.save()
+
+      return response.json({
+        status: 'success',
+        message: 'Perfil atualizado com sucesso!',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          cpf: user.cpfcnpj,
+          birthDate: user.birth_date,
+          address: user.address,
+          city: user.city,
+          state: user.state,
+          zipCode: user.zip_code,
+          status: user.status,
+          avatar: user.avatar
+        }
+      })
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor'
+      })
+    }
+  }
+
   async updateVehicleData({ request, auth, response }) {
     try {
       const user = await auth.getUser()
@@ -318,6 +363,101 @@ class DriverController {
       return response.status(500).json({
         status: 'error',
         message: 'Erro interno do servidor'
+      })
+    }
+  }
+
+  async uploadAvatar({ request, auth, response }) {
+    try {
+      const user = await auth.getUser()
+      const file = request.file('avatar')
+
+      if (!file) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Nenhuma imagem enviada'
+        })
+      }
+
+      // Fazer upload para Cloudinary
+      const CloudinaryService = use('App/Services/Cloudinary')
+      const cloudinaryResponse = await CloudinaryService.upload(file.tmpPath)
+
+      // Atualizar avatar do usuário
+      await User.query()
+        .where('id', user.id)
+        .update({
+          avatar: cloudinaryResponse.url.secure_url,
+          idCloudinaryAvatar: cloudinaryResponse.url.public_id
+        })
+
+      return response.json({
+        status: 'success',
+        message: 'Avatar atualizado com sucesso',
+        url: cloudinaryResponse.url
+      })
+    } catch (error) {
+      console.error('Erro ao fazer upload do avatar:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro ao fazer upload do avatar'
+      })
+    }
+  }
+
+  async uploadDocument({ request, auth, response }) {
+    try {
+      const user = await auth.getUser()
+      const file = request.file('document')
+      const type = request.input('type') // cnh, selfie, crlv, insurance
+
+      if (!file || !type) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Arquivo e tipo são obrigatórios'
+        })
+      }
+
+      // Fazer upload para Cloudinary
+      const CloudinaryService = use('App/Services/Cloudinary')
+      const cloudinaryResponse = await CloudinaryService.upload(file.tmpPath)
+
+      // Atualizar documento do usuário
+      const Documents = use('App/Models/Base/Documents')
+      const existingDoc = await Documents.query()
+        .where('idUser', user.id)
+        .where('type', type)
+        .first()
+
+      if (existingDoc) {
+        existingDoc.url = cloudinaryResponse.url.secure_url
+        existingDoc.idCloudinary = cloudinaryResponse.url.public_id
+        existingDoc.verified = false
+        await existingDoc.save()
+      } else {
+        await Documents.create({
+          idUser: user.id,
+          type: type,
+          url: cloudinaryResponse.url.secure_url,
+          idCloudinary: cloudinaryResponse.url.public_id,
+          verified: false
+        })
+      }
+
+      return response.json({
+        status: 'success',
+        message: 'Documento enviado com sucesso',
+        document: {
+          type: type,
+          url: cloudinaryResponse.url.secure_url,
+          verified: false
+        }
+      })
+    } catch (error) {
+      console.error('Erro ao fazer upload do documento:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro ao fazer upload do documento'
       })
     }
   }
