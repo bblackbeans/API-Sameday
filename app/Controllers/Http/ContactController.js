@@ -2,6 +2,7 @@
 
 const Contact = use('App/Models/Base/Contacts')
 const Database = use('Database')
+const EmailService = use('App/Services/EmailService')
 
 class ContactController {
   /**
@@ -37,6 +38,29 @@ class ContactController {
         message: data.message,
         user_type: data.userType
       })
+
+      // Enviar email de notificação para a equipe
+      try {
+        await EmailService.sendContactForm({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          subject: data.subject,
+          message: data.message,
+          userType: data.userType
+        })
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError)
+        // Não falha o processo se o email não enviar
+      }
+
+      // Enviar email de confirmação para o usuário
+      try {
+        await EmailService.sendConfirmationEmail(data.email, data.name, 'contact')
+      } catch (emailError) {
+        console.error('Erro ao enviar email de confirmação:', emailError)
+        // Não falha o processo se o email não enviar
+      }
 
       return response.status(201).json({
         message: 'Mensagem enviada com sucesso!',

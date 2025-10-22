@@ -2,6 +2,7 @@
 
 const Shipper = use('App/Models/Base/Shippers')
 const Database = use('Database')
+const EmailService = use('App/Services/EmailService')
 
 class ShipperController {
   /**
@@ -54,6 +55,32 @@ class ShipperController {
         monthly_volume: data.monthlyVolume,
         description: data.description
       })
+
+      // Enviar email de notificação para a equipe
+      try {
+        await EmailService.sendShipperRegistration({
+          companyName: data.companyName,
+          cnpj: data.cnpj,
+          contactName: data.contactName,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          businessType: data.businessType,
+          monthlyVolume: data.monthlyVolume,
+          description: data.description
+        })
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError)
+        // Não falha o processo se o email não enviar
+      }
+
+      // Enviar email de confirmação para o usuário
+      try {
+        await EmailService.sendConfirmationEmail(data.email, data.contactName, 'shipper')
+      } catch (emailError) {
+        console.error('Erro ao enviar email de confirmação:', emailError)
+        // Não falha o processo se o email não enviar
+      }
 
       return response.status(201).json({
         message: 'Embarcador cadastrado com sucesso!',
