@@ -136,6 +136,15 @@ Route.group('Shared With Platforms - No Authentication', () => {
   Route.put('notifications/:id/read', 'NotificationController.markAsRead').middleware(['auth:sameDay'])
   Route.get('notifications/settings', 'NotificationController.getSettings').middleware(['auth:sameDay'])
 
+  // Email Testing (Development only)
+  Route.get('email/test', 'EmailController.testEmail')
+  Route.post('email/test', 'EmailController.sendTestEmail')
+  Route.post('email/send', 'EmailController.sendCustomEmail')
+
+  // Site Email Integration
+  Route.post('api/send-email', 'SiteEmailController.sendEmail')
+  Route.get('api/send-email/test', 'SiteEmailController.testEndpoint')
+
   // Adjust later
   Route.get('schedule/driver-raffle', 'DriverRaffleTaskController.index')
   Route.get('schedule/status-invoice', 'IuguInvoiceStatusTaskController.index')

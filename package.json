@@ -45,6 +45,7 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.6.0",
     "node-cron": "^3.0.0",
+    "nodemailer": "^7.0.9",
     "socket.io": "^4.1.2",
     "sqlite3": "^5.0.2",
     "twilio": "^3.64.0",

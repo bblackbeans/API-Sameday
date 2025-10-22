@@ -2,6 +2,7 @@
 
 const StockStorePartner = use('App/Models/Base/StockStorePartners')
 const Database = use('Database')
+const EmailService = use('App/Services/EmailService')
 
 class StockStorePartnerController {
   /**
@@ -45,6 +46,31 @@ class StockStorePartnerController {
         experience: data.experience,
         description: data.description
       })
+
+      // Enviar email de notificação para a equipe
+      try {
+        await EmailService.sendStockStoreRegistration({
+          ownerName: data.ownerName,
+          email: data.email,
+          phone: data.phone,
+          cpfCnpj: data.cpfCnpj,
+          propertyType: data.propertyType,
+          address: data.address,
+          spaceSize: data.spaceSize,
+          availability: data.availability
+        })
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError)
+        // Não falha o processo se o email não enviar
+      }
+
+      // Enviar email de confirmação para o usuário
+      try {
+        await EmailService.sendConfirmationEmail(data.email, data.ownerName, 'stock-store')
+      } catch (emailError) {
+        console.error('Erro ao enviar email de confirmação:', emailError)
+        // Não falha o processo se o email não enviar
+      }
 
       return response.status(201).json({
         message: 'Interesse enviado com sucesso!',
