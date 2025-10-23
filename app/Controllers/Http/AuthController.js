@@ -113,19 +113,11 @@ class AuthController {
         return
       }
 
-      // Try to find user by email first, then by CPF/CNPJ
-      let user = await Users.query()
-        .where('email', username)
+      // Find user by CPF/CNPJ (primary method for portal)
+      const user = await Users.query()
+        .where('cpfcnpj', username)
         .select('id', 'name', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser')
         .first()
-
-      // If not found by email, try by CPF/CNPJ
-      if (!user) {
-        user = await Users.query()
-          .where('cpfcnpj', username)
-          .select('id', 'name', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser')
-          .first()
-      }
 
       if (!user) {
         response.status(404)
