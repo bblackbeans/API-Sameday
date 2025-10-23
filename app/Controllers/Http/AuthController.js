@@ -90,7 +90,7 @@ class AuthController {
       }
 
       const user = await Users.query()
-        .where('cpfcnpj', username)
+        .where('email', username)
         .select('id', 'name', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser')
         .first()
 
