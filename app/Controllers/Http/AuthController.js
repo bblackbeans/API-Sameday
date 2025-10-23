@@ -207,12 +207,27 @@ class AuthController {
 
       // Verificar senha usando Hash.verify diretamente
       const Hash = use('Hash')
+      
+      // Debug: Log da comparação
+      console.log('Debug Login:', {
+        inputPassword: password,
+        storedPassword: user.password,
+        passwordLength: user.password ? user.password.length : 0
+      })
+      
       const isPasswordValid = await Hash.verify(password, user.password)
+      
+      console.log('Password verification result:', isPasswordValid)
 
       if (!isPasswordValid) {
         return response.status(401).json({
           status: 'error',
-          message: 'Senha de usuário inválida.'
+          message: 'Senha de usuário inválida.',
+          debug: {
+            inputPassword: password,
+            storedPasswordLength: user.password ? user.password.length : 0,
+            verificationResult: isPasswordValid
+          }
         })
       }
 
