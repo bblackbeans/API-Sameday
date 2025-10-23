@@ -121,7 +121,7 @@ class AuthController {
       // Buscar usuário por CPF/CNPJ
       const user = await Users.query()
         .where('cpfcnpj', cleanCpfCnpj)
-        .select('id', 'name', 'email', 'phone', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser', 'cpfcnpj')
+        .select('id', 'name', 'email', 'phone', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser', 'cpfcnpj', 'password')
         .first()
 
       if (!user) {
