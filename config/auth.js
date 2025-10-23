@@ -81,7 +81,7 @@ module.exports = {
 
   sameDay: {
     serializer: 'lucid',
-    model: 'App/Models/User',
+    model: 'App/Models/Base/Users',
     scheme: 'jwt',
     uid: 'email',
     password: 'password',
