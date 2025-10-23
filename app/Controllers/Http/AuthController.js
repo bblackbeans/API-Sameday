@@ -17,6 +17,47 @@ class AuthController {
   constructor() {}
 
   /**
+   * Test endpoint to check user existence
+   */
+  async testUser({ request, response }) {
+    try {
+      const { username } = request.all()
+      
+      if (!username) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Username is required'
+        })
+      }
+
+      // Check by CPF/CNPJ
+      const userByCpf = await Users.query()
+        .where('cpfcnpj', username)
+        .select('id', 'name', 'email', 'cpfcnpj', 'profile', 'typeUser', 'status', 'activatedUser')
+        .first()
+
+      // Check by Email
+      const userByEmail = await Users.query()
+        .where('email', username)
+        .select('id', 'name', 'email', 'cpfcnpj', 'profile', 'typeUser', 'status', 'activatedUser')
+        .first()
+
+      return response.json({
+        status: 'success',
+        searchedFor: username,
+        userByCpf: userByCpf,
+        userByEmail: userByEmail,
+        message: 'User lookup completed'
+      })
+    } catch (error) {
+      return response.status(500).json({
+        status: 'error',
+        message: error.message
+      })
+    }
+  }
+
+  /**
    * POST /v2/auth/login
    *
    * @param {object} ctx

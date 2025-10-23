@@ -52,6 +52,9 @@ Route.group('Shared With Platforms - No Authentication', () => {
   // Login
   Route.post('auth/login', 'AuthController.login')
   Route.any('auth/login', methodNotAllowed)
+  
+  // Test user lookup
+  Route.post('auth/test-user', 'AuthController.testUser')
 
   // Recover Password
   Route.post('recover_password', 'RecoverPasswordController.step_1')
