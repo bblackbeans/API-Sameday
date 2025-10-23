@@ -197,7 +197,9 @@ class SiteEmailController {
       SMTP_USER: process.env.SMTP_USER ? '***' : 'NOT_SET',
       SMTP_PASS: process.env.SMTP_PASS ? '***' : 'NOT_SET',
       SMTP_FROM: process.env.SMTP_FROM,
-      CONTACT_EMAIL: process.env.CONTACT_EMAIL
+      CONTACT_EMAIL: process.env.CONTACT_EMAIL,
+      NODE_ENV: process.env.NODE_ENV,
+      APP_URL: process.env.APP_URL
     }
 
     // Testar conexão com email
