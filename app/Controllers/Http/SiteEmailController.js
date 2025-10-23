@@ -19,6 +19,25 @@ class SiteEmailController {
         })
       }
 
+      // Verificar configurações de email
+      const emailConfig = {
+        SMTP_HOST: process.env.SMTP_HOST,
+        SMTP_PORT: process.env.SMTP_PORT,
+        SMTP_USER: process.env.SMTP_USER,
+        SMTP_PASS: process.env.SMTP_PASS ? 'SET' : 'NOT_SET',
+        SMTP_FROM: process.env.SMTP_FROM,
+        CONTACT_EMAIL: process.env.CONTACT_EMAIL
+      }
+
+      // Se não tem configuração de email, retornar erro
+      if (!emailConfig.SMTP_HOST || !emailConfig.SMTP_USER || !emailConfig.SMTP_PASS) {
+        return response.status(500).json({
+          success: false,
+          message: 'Configuração de email não encontrada',
+          emailConfig: emailConfig
+        })
+      }
+
       // Determinar assunto baseado no tipo
       const subjects = {
         'contact': 'Contato - SameDay',
@@ -171,11 +190,33 @@ class SiteEmailController {
    * Testar endpoint
    */
   async testEndpoint({ response }) {
+    // Verificar configurações de email
+    const emailConfig = {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER ? '***' : 'NOT_SET',
+      SMTP_PASS: process.env.SMTP_PASS ? '***' : 'NOT_SET',
+      SMTP_FROM: process.env.SMTP_FROM,
+      CONTACT_EMAIL: process.env.CONTACT_EMAIL,
+      NODE_ENV: process.env.NODE_ENV,
+      APP_URL: process.env.APP_URL
+    }
+
+    // Testar conexão com email
+    let emailTest = null
+    try {
+      emailTest = await EmailService.testConnection()
+    } catch (error) {
+      emailTest = { success: false, error: error.message }
+    }
+
     return response.json({
       success: true,
       message: 'Endpoint funcionando!',
       timestamp: new Date().toISOString(),
-      availableFormTypes: ['contact', 'embarcador', 'transportador', 'stock-store', 'entregador']
+      availableFormTypes: ['contact', 'embarcador', 'transportador', 'stock-store', 'entregador'],
+      emailConfig,
+      emailTest
     })
   }
 }
