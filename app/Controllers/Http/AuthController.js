@@ -58,6 +58,30 @@ class AuthController {
   }
 
   /**
+   * List all users for debugging
+   */
+  async listUsers({ response }) {
+    try {
+      const users = await Users.query()
+        .select('id', 'name', 'email', 'cpfcnpj', 'profile', 'typeUser', 'status', 'activatedUser', 'created_at')
+        .orderBy('created_at', 'desc')
+        .limit(10)
+
+      return response.json({
+        status: 'success',
+        users: users,
+        count: users.length,
+        message: 'Users listed successfully'
+      })
+    } catch (error) {
+      return response.status(500).json({
+        status: 'error',
+        message: error.message
+      })
+    }
+  }
+
+  /**
    * POST /v2/auth/login
    *
    * @param {object} ctx
