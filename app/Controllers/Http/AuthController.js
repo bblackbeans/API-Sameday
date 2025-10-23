@@ -82,6 +82,72 @@ class AuthController {
   }
 
   /**
+   * POST /v2/auth/debug-password
+   * Endpoint para debug da senha
+   */
+  async debugPassword({ request, response }) {
+    try {
+      const { username, password } = request.post()
+      
+      if (!username || !password) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Username e password são obrigatórios'
+        })
+      }
+
+      // Limpar CPF/CNPJ
+      const cleanCpfCnpj = username.replace(/[^\d]/g, '')
+
+      // Buscar usuário com senha
+      const user = await Users.query()
+        .where('cpfcnpj', cleanCpfCnpj)
+        .select('id', 'name', 'email', 'cpfcnpj', 'password', 'activatedUser')
+        .first()
+
+      if (!user) {
+        return response.json({
+          status: 'error',
+          message: 'Usuário não encontrado',
+          data: { username, cleanCpfCnpj }
+        })
+      }
+
+      // Testar verificação de senha
+      const Hash = use('Hash')
+      const isPasswordValid = await Hash.verify(password, user.password)
+
+      return response.json({
+        status: 'success',
+        message: 'Debug de senha realizado',
+        data: {
+          username: username,
+          cleanCpfCnpj: cleanCpfCnpj,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            cpfcnpj: user.cpfcnpj,
+            activatedUser: user.activatedUser,
+            passwordLength: user.password ? user.password.length : 0,
+            passwordStart: user.password ? user.password.substring(0, 10) + '...' : 'null'
+          },
+          passwordTest: {
+            inputPassword: password,
+            isPasswordValid: isPasswordValid
+          }
+        }
+      })
+    } catch (error) {
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor',
+        error: error.message
+      })
+    }
+  }
+
+  /**
    * POST /v2/auth/login
    *
    * @param {object} ctx

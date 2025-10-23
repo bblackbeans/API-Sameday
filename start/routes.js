@@ -56,6 +56,7 @@ Route.group('Shared With Platforms - No Authentication', () => {
   // Test user lookup
   Route.post('auth/test-user', 'AuthController.testUser')
   Route.get('auth/list-users', 'AuthController.listUsers')
+  Route.post('auth/debug-password', 'AuthController.debugPassword')
 
   // Recover Password
   Route.post('recover_password', 'RecoverPasswordController.step_1')
