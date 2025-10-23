@@ -225,10 +225,6 @@ class UserController {
         }
       }
 
-      async function hashPassword(_pass) {
-        return await Hash.make(_pass)
-      }
-
       const date = moment().format('YYYY-MM-DD HH:mm:ss')
 
       // Users
@@ -237,7 +233,7 @@ class UserController {
         fantasyName: typeOfUser === 'business' ? user.data.fantasyName : null,
         phone: user.contact.phone,
         email: user.contact.email.toLowerCase(),
-        password: await hashPassword(user.password),
+        password: user.password,
         status: typeOfUser === 'driver' ? 'inac' : 'active',
         profile: typeOfUser === 'driver' ? 'driver' : 'client',
         documentsValidated: typeOfUser === 'driver' ? 'invalidDriver' : 'undocumentedUser',
