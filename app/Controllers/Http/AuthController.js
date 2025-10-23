@@ -107,70 +107,87 @@ class AuthController {
         platform
       } = credential
 
+      // Validação: Verificar se username e password estão corretos
       if (!username || !password) {
-        response.status(401)
-        response.json(ErrorController.error('user', '00003', null))
-        return
+        return response.status(400).json({
+          status: 'error',
+          message: 'Username e password são obrigatórios'
+        })
       }
 
-      // Find user by CPF/CNPJ (primary method for portal)
+      // Limpar CPF/CNPJ (remover formatação)
+      const cleanCpfCnpj = username.replace(/[^\d]/g, '')
+
+      // Buscar usuário por CPF/CNPJ
       const user = await Users.query()
-        .where('cpfcnpj', username)
-        .select('id', 'name', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser')
+        .where('cpfcnpj', cleanCpfCnpj)
+        .select('id', 'name', 'email', 'phone', 'profile', 'typeUser', 'avatar', 'idCloudinaryAvatar', 'status', 'activatedUser', 'cpfcnpj')
         .first()
 
       if (!user) {
-        response.status(404)
-        response.json(ErrorController.error('user', '00002', null))
-        return
+        return response.status(404).json({
+          status: 'error',
+          message: 'Usuário não cadastrado em nossa base.'
+        })
       }
 
-      const {
-        typeUser,
-        status,
-        activatedUser
-      } = user
+      // Verificar se usuário está ativo
+      if (!user.activatedUser) {
+        return response.status(401).json({
+          status: 'error',
+          message: 'Usuário não ativado.'
+        })
+      }
 
-      if (platform !== 'portal') {
-        if (typeUser === 'client' || typeUser === 'business') {
-          response.status(401)
-          response.json(ErrorController.error('user', '00008', null))
-          return
+      // Verificar senha usando Hash.verify diretamente
+      const Hash = use('Hash')
+      const isPasswordValid = await Hash.verify(password, user.password)
+
+      if (!isPasswordValid) {
+        return response.status(401).json({
+          status: 'error',
+          message: 'Senha de usuário inválida.'
+        })
+      }
+
+      // Geração de Token: Criar JWT com informações do usuário
+      const token = await auth.generate(user)
+
+      // Resposta: Retornar token + dados do usuário
+      const responseData = {
+        status: 'success',
+        message: 'Login realizado com sucesso!',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          cpfcnpj: user.cpfcnpj,
+          profile: user.profile,
+          typeUser: user.typeUser,
+          avatar: user.avatar,
+          status: user.status
+        },
+        token: {
+          token_type: 'bearer',
+          access_token: token.token,
+          expires_in: 2678400 // 31 dias em segundos
         }
-
-        if (status === 'inac') {
-          response.status(401)
-          response.json(ErrorController.error('user', '00009', null))
-          return
-        }
       }
 
-      if (!activatedUser) {
-        response.status(401)
-        response.json(ErrorController.error('user', '00010', null))
-        return
+      // Para portal, adicionar refresh token
+      if (platform === 'portal' && token.refreshToken) {
+        responseData.token.refresh_token = token.refreshToken
       }
 
-      if (await auth.validate(username, password)) {
-        const t = await auth.generate(user)
-        const claim = platform === 'portal' ? JSON.parse(Buffer.from(t.token.split('.')[1], 'base64').toString()) : null
+      return response.status(200).json(responseData)
 
-        const objReturn = {
-          status: 'success',
-          user: user,
-          token: {
-            token_type: t.type,
-            access_token: t.token,
-            refresh_token: platform === 'portal' ? t.refreshToken : null,
-            expires_in: platform === 'portal' ? claim.exp - moment().unix() : null,
-          }
-        }
-
-        response.status(200)
-        response.json(objReturn)
-      }
-    } catch (e) {
-      throw e
+    } catch (error) {
+      console.error('Erro no login:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro interno do servidor'
+      })
     }
   }
 }
