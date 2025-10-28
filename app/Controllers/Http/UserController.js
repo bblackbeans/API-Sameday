@@ -11,6 +11,7 @@ const Addresses = use('App/Models/Base/Addresses')
 const Documents = use('App/Models/Base/Documents')
 const ValidateDriver = use('App/Models/Base/ValidateDriver')
 const DeliveryVehicles = use('App/Models/Base/DeliveryVehicles')
+const Database = use('Database')
 
 /** @type {import('../ErrorController')} */
 const ErrorController = make('App/Controllers/ErrorController')
@@ -332,6 +333,80 @@ class UserController {
       response.json(objReturn)
     } catch (e) {
       throw e
+    }
+  }
+
+  /**
+   * DELETE /user/:id
+   * Deletar usuário (apenas admin)
+   *
+   * @param {object} ctx
+   * @param {Auth} ctx.auth
+   * @param {params} ctx.params
+   * @param {Response} ctx.response
+   */
+  async deleteUser({ auth, params, response }) {
+    try {
+      const authenticatedUser = await auth.getUser()
+
+      // Verificar se é administrador
+      if (authenticatedUser.profile !== 'administrator') {
+        return response.status(403).json({
+          status: 'error',
+          message: 'Apenas administradores podem deletar usuários'
+        })
+      }
+
+      const { id } = params
+
+      if (!id) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'ID do usuário é obrigatório'
+        })
+      }
+
+      // Buscar usuário
+      const user = await Users.findOrFail(id)
+
+      // Não permitir deletar a si mesmo
+      if (user.id === authenticatedUser.id) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Você não pode deletar seu próprio usuário'
+        })
+      }
+
+      // Deletar avatar do Cloudinary se existir
+      if (user.idCloudinaryAvatar) {
+        try {
+          await Cloudinary.destroy([user.idCloudinaryAvatar])
+        } catch (error) {
+          console.log('Erro ao deletar avatar do Cloudinary:', error)
+        }
+      }
+
+      // Deletar relacionamentos
+      await Database.table('addresses').where('idUser', id).delete()
+      await Database.table('delivery_vehicles').where('idUser', id).delete()
+      await Database.table('documents').where('idUser', id).delete()
+      await Database.table('validate_driver').where('idUser', id).delete()
+      await Database.table('user_bank').where('idUser', id).delete()
+
+      // Deletar usuário
+      await user.delete()
+
+      return response.json({
+        status: 'success',
+        message: 'Usuário deletado com sucesso!'
+      })
+
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error)
+      return response.status(500).json({
+        status: 'error',
+        message: 'Erro ao deletar usuário'
+      })
     }
   }
 

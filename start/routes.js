@@ -195,6 +195,7 @@ Route.group('Portal - With Authentication', () => {
   Route.get('user', 'UserController.getUser')
   Route.put('user', 'UserController.putUser')
   Route.get('user/all', 'UserController.getUserAll')
+  Route.delete('user/:id', 'UserController.deleteUser')
   Route.put('user/avatar', 'UserController.putProfilePicture')
   Route.post('user/driver/validate', 'UserController.postValidateDriver')
   Route.any('user', methodNotAllowed)
