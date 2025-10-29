@@ -337,15 +337,16 @@ class UserController {
   }
 
   /**
-   * DELETE /user
+   * DELETE /user/:id ou DELETE /user
    * Deletar usuário (apenas admin)
    *
    * @param {object} ctx
    * @param {Auth} ctx.auth
    * @param {Request} ctx.request
+   * @param {params} ctx.params
    * @param {Response} ctx.response
    */
-  async deleteUser({ auth, request, response }) {
+  async deleteUser({ auth, params, request, response }) {
     try {
       const authenticatedUser = await auth.getUser()
 
@@ -357,11 +358,13 @@ class UserController {
         })
       }
 
-      // Obter ID do usuário (query param, body ou header)
+      // Obter ID do usuário (URL param, query param, body ou header)
       let idUser = 0
       const bodyData = request.all()
       
-      if (bodyData.id) {
+      if (params.id) {
+        idUser = params.id  // De /user/:id
+      } else if (bodyData.id) {
         idUser = bodyData.id
       } else if (bodyData.idUser) {
         idUser = bodyData.idUser
