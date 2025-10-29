@@ -412,7 +412,7 @@ class UserController {
       await Database.table('addresses').where('idUser', idUser).delete()
       await Database.table('delivery_vehicles').where('idUser', idUser).delete()
       await Database.table('documents').where('idUser', idUser).delete()
-      await Database.table('validate_driver').where('idUser', idUser).delete()
+      await Database.table('validateDriver').where('idUser', idUser).delete()
       await Database.table('user_bank').where('idUser', idUser).delete()
 
       // Deletar usuário
