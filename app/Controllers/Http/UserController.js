@@ -337,15 +337,15 @@ class UserController {
   }
 
   /**
-   * DELETE /user/:id
+   * DELETE /user
    * Deletar usuário (apenas admin)
    *
    * @param {object} ctx
    * @param {Auth} ctx.auth
-   * @param {params} ctx.params
+   * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async deleteUser({ auth, params, response }) {
+  async deleteUser({ auth, request, response }) {
     try {
       const authenticatedUser = await auth.getUser()
 
@@ -357,9 +357,21 @@ class UserController {
         })
       }
 
-      const { id } = params
+      // Obter ID do usuário (query param, body ou header)
+      let idUser = 0
+      const bodyData = request.all()
+      
+      if (bodyData.id) {
+        idUser = bodyData.id
+      } else if (bodyData.idUser) {
+        idUser = bodyData.idUser
+      } else if (request.input('id')) {
+        idUser = request.input('id')
+      } else if (request.header('idUser')) {
+        idUser = parseInt(request.header('idUser'))
+      }
 
-      if (!id) {
+      if (!idUser) {
         return response.status(400).json({
           status: 'error',
           message: 'ID do usuário é obrigatório'
@@ -367,7 +379,14 @@ class UserController {
       }
 
       // Buscar usuário
-      const user = await Users.findOrFail(id)
+      const user = await Users.find(idUser)
+
+      if (!user) {
+        return response.status(404).json({
+          status: 'error',
+          message: 'Usuário não encontrado'
+        })
+      }
 
       // Não permitir deletar a si mesmo
       if (user.id === authenticatedUser.id) {
@@ -387,25 +406,26 @@ class UserController {
       }
 
       // Deletar relacionamentos
-      await Database.table('addresses').where('idUser', id).delete()
-      await Database.table('delivery_vehicles').where('idUser', id).delete()
-      await Database.table('documents').where('idUser', id).delete()
-      await Database.table('validate_driver').where('idUser', id).delete()
-      await Database.table('user_bank').where('idUser', id).delete()
+      await Database.table('addresses').where('idUser', idUser).delete()
+      await Database.table('delivery_vehicles').where('idUser', idUser).delete()
+      await Database.table('documents').where('idUser', idUser).delete()
+      await Database.table('validate_driver').where('idUser', idUser).delete()
+      await Database.table('user_bank').where('idUser', idUser).delete()
 
       // Deletar usuário
       await user.delete()
 
       return response.json({
         status: 'success',
-        message: 'Usuário deletado com sucesso!'
+        message: 'Usuário deletado com sucesso!',
+        deletedUserId: idUser
       })
 
     } catch (error) {
       console.error('Erro ao deletar usuário:', error)
       return response.status(500).json({
         status: 'error',
-        message: 'Erro ao deletar usuário'
+        message: 'Erro ao deletar usuário: ' + error.message
       })
     }
   }
